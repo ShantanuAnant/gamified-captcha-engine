@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class AuthenticateConfig(AppConfig):
+class MouseAuthConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'authenticate'
+    name = 'mouse_auth'
