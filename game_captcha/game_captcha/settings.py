@@ -77,8 +77,12 @@ WSGI_APPLICATION = 'game_captcha.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'Arsh$0101',
+        'HOST': 'db.qikklcgtgxngxbyjvkjb.supabase.co',  # Set to your database host
+        'PORT': '5432',       # Default PostgreSQL port
     }
 }
 
