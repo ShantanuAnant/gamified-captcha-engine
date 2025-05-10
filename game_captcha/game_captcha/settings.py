@@ -134,3 +134,8 @@ REST_FRAMEWORK = {
     )
     
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Add your frontend URL here
+    "http://13.233.103.90",  # Add your production domain here
+]
