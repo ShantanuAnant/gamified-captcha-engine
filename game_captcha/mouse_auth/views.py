@@ -1,36 +1,31 @@
+# mouse_auth/views.py
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth import get_user_model
 from .models import MouseMovementSession, MouseMovementSequence
 from .serializers import MouseMovementSessionSerializer
 from .utils import extract_features, train_model, verify_user_identity
 import json
 
-User = get_user_model()
+# from django.contrib.auth.models import User
 
+# mouse_auth/views.py
 class CollectTrainingDataView(APIView):
     def post(self, request):
         try:
-            user = request.user
-            if not user.is_authenticated:
-                return Response(
-                    {'error': 'Authentication required'}, 
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-            
             data = request.data
+            user_id = data.get('user_id')  # Get the integer user_id
             movement_sequences = data.get('sequences', [])
             
-            if not movement_sequences:
+            if not user_id or not movement_sequences:
                 return Response(
-                    {'error': 'No movement sequences provided'},
+                    {'error': 'user_id and sequences are required'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Create session
+            # Create session with user_id (not user)
             session = MouseMovementSession.objects.create(
-                user=user,
+                user_id=user_id,  # Changed from user=user to user_id=user_id
                 is_training_data=True
             )
             
@@ -53,16 +48,9 @@ class CollectTrainingDataView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
 class TrainModelView(APIView):
     def post(self, request):
         try:
-            if not request.user.is_staff:
-                return Response(
-                    {'error': 'Staff permission required'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            
             test_accuracy = train_model()
             return Response(
                 {
@@ -80,25 +68,21 @@ class TrainModelView(APIView):
 class VerifyUserIdentityView(APIView):
     def post(self, request):
         try:
-            user = request.user
-            if not user.is_authenticated:
-                return Response(
-                    {'error': 'Authentication required'}, 
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
+            data = request.data
+            user_id = data.get('user_id')
+            movement_sequence = data.get('sequence')
             
-            movement_sequence = request.data.get('sequence')
-            if not movement_sequence:
+            if not user_id or not movement_sequence:
                 return Response(
-                    {'error': 'Movement sequence required'},
+                    {'error': 'user_id and sequence are required'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            result = verify_user_identity(user.id, movement_sequence)
+            result = verify_user_identity(user_id, movement_sequence)
             
-            # Log verification attempt (not for training)
+            # Log verification attempt
             session = MouseMovementSession.objects.create(
-                user=user,
+                user_id=user_id,
                 is_training_data=False
             )
             MouseMovementSequence.objects.create(

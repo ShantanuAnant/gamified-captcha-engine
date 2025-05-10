@@ -55,27 +55,28 @@ def extract_features(sequence):
 
 def train_model():
     from .models import MouseMovementSequence
-    from django.contrib.auth import get_user_model
-    
-    User = get_user_model()
     
     # Get all training data
     sequences = MouseMovementSequence.objects.filter(
         session__is_training_data=True
-    ).select_related('session__user')
+    ).select_related('session')  # Only select_related to session
     
-    if sequences.count() < 50:  # Minimum samples required
+    if sequences.count() < 3:
         raise ValueError("Not enough training data available")
     
-    # Prepare features and labels
     features = []
     labels = []
     
     for seq in sequences:
-        if len(seq.sequence) >= 5:  # Minimum sequence length
+        if len(seq.sequence) >= 5:
             seq_features = extract_features(seq.sequence)
             features.append(seq_features)
-            labels.append(seq.session.user.id)
+            
+            # Works with both IntegerField and ForeignKey approaches
+            if hasattr(seq.session, 'user'):  # If using ForeignKey
+                labels.append(seq.session.user.id)
+            else:  # If using IntegerField
+                labels.append(seq.session.user_id)
     
     features_df = pd.DataFrame(features).fillna(0)
     
